@@ -24,19 +24,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas numpy scikit-learn joblib
+          pip install pandas numpy
 
       - name: Run dataset build script
         run: |
-          python scripts/build_training_dataset.py
-      
-      - name: Train models
-        run: python scripts/train_rf_model.py    
+          python scripts/build_training_dataset.py    
       
       - name: Show dataset info
         run: |
           ls -lh data/
-          ls -lh models/
+
           
       - name: Commit trained models
         run: |
@@ -45,7 +42,6 @@ jobs:
       
           git pull --rebase
       
-          git add models/*.pkl
           git add data/training_dataset.csv
       
           git diff --staged --quiet || git commit -m "Update trained models"
