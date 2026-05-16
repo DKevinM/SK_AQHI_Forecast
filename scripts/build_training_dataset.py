@@ -108,23 +108,79 @@ data["cos_hour"] = np.cos(2*np.pi*data["hour"]/24)
 data = data.sort_values(["station", "datetime"])
 
 
-# ------------------------------------------------
-# LAG FEATURES
-# ------------------------------------------------
-for lag in [1,2,3,6,12,24]:
-
-    data[f"PM25_lag{lag}"] = data.groupby("station")["PM25"].shift(lag)
-    data[f"O3_lag{lag}"] = data.groupby("station")["O3"].shift(lag)
-    data[f"NO2_lag{lag}"] = data.groupby("station")["NO2"].shift(lag)
-
 
 # ------------------------------------------------
 # 3-hour rolling averages
 # ------------------------------------------------
-data["pm25_3hr"] = data.groupby("station")["PM25"].rolling(3).mean().reset_index(level=0,drop=True)
-data["o3_3hr"] = data.groupby("station")["O3"].rolling(3).mean().reset_index(level=0,drop=True)
-data["no2_3hr"] = data.groupby("station")["NO2"].rolling(3).mean().reset_index(level=0,drop=True)
+data = data.set_index("datetime")
 
+data["PM25_3hr"] = (
+    data.groupby("station")["PM25"]
+    .rolling("3h", min_periods=2)
+    .mean()
+    .reset_index(level=0, drop=True)
+)
+
+data["NO2_3hr"] = (
+    data.groupby("station")["NO2"]
+    .rolling("3h", min_periods=2)
+    .mean()
+    .reset_index(level=0, drop=True)
+)
+
+data["O3_3hr"] = (
+    data.groupby("station")["O3"]
+    .rolling("3h", min_periods=2)
+    .mean()
+    .reset_index(level=0, drop=True)
+)
+
+
+
+# ------------------------------------------------
+# AQHI calculation
+# ------------------------------------------------
+data["AQHI"] = (
+    (1000 / 10.4) *
+    (
+        (np.exp(0.000537 * data["O3_3hr"]) - 1) +
+        (np.exp(0.000871 * data["NO2_3hr"]) - 1) +
+        (np.exp(0.000487 * data["PM25_3hr"]) - 1)
+    )
+)
+
+data["AQHI"] = data["AQHI"].clip(lower=1, upper=11)
+data["AQHI"] = data["AQHI"].round(1)
+
+
+for h in [1,2,3,6]:
+
+    data[f"AQHI_future_{h}h"] = (
+        data.groupby("station")["AQHI"]
+        .shift(-h)
+    )
+
+
+for lag in [1,2,3,6,12,24]:
+
+    data[f"AQHI_lag{lag}"] = (
+        data.groupby("station")["AQHI"]
+        .shift(lag)
+    )
+
+
+data["AQHI_change_1h"] = (
+    data["AQHI"] - data["AQHI_lag1"]
+)
+
+data["AQHI_change_3h"] = (
+    data["AQHI"] - data["AQHI_lag3"]
+)
+
+
+
+
+data = data.reset_index()
 
 # ------------------------------------------------
 # Remove incomplete rows
