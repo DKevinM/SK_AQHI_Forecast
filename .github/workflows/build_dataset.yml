@@ -3,19 +3,25 @@ name: Build Training Dataset
 on:
   workflow_dispatch:
 
+concurrency:
+  group: sk-build-training-dataset
+  cancel-in-progress: false
+
 permissions:
   contents: write
-  
+
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0        
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -28,25 +34,35 @@ jobs:
 
       - name: Run dataset build script
         run: |
-          python scripts/build_training_dataset.py    
-      
+          python scripts/build_training_dataset.py
+
       - name: Show dataset info
         run: |
           ls -lh data/
 
-          
-      - name: Commit trained models
+      - name: Commit training dataset
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-      
-          git pull --rebase
-      
+
+          git stash
+
+          git pull --rebase origin main
+
+          git stash pop || true
+
           git add data/training_dataset.csv
-      
-          git diff --staged --quiet || git commit -m "Update trained models"
-      
-          git push
 
-        
+          if git diff --cached --quiet; then
+            echo "No dataset changes"
+          else
 
+            git commit -m "Update training dataset"
+
+            git push || (
+              echo "Push failed — retrying..."
+              git pull --rebase origin main
+              git push
+            )
+
+          fi
