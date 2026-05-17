@@ -71,14 +71,13 @@ def train_model(target, name):
     y = data[target]
 
     split_index = int(len(X) * 0.8)
-    
+
     X_train = X.iloc[:split_index]
     X_test  = X.iloc[split_index:]
-    
+
     y_train = y.iloc[:split_index]
     y_test  = y.iloc[split_index:]
 
-    
     model = RandomForestRegressor(
         n_estimators=300,
         max_depth=15,
@@ -94,41 +93,42 @@ def train_model(target, name):
     pred = model.predict(X_test)
 
     score = model.score(X_test, y_test)
+
     print(f"{name} model R²:", score)
     print("OOB:", model.oob_score_)
-    
+
     joblib.dump(model, f"models/{name}_model.pkl")
-    
+
     importance = pd.Series(
         model.feature_importances_,
         index=feature_cols
     ).sort_values(ascending=False)
-    
+
     importance.to_csv(f"models/{name}_importance.csv")
-    
+
     print(f"\nTop features for {name}:")
     print(importance.head(10))
 
     rmse = np.sqrt(mean_squared_error(y_test, pred))
     mae = mean_absolute_error(y_test, pred)
     r2 = r2_score(y_test, pred)
-    
+
     print(f"\n{name}")
     print("RMSE:", rmse)
     print("MAE:", mae)
     print("R²:", r2)
 
-with open(f"models/{name}_metrics.txt", "w") as f:
+    with open(f"models/{name}_metrics.txt", "w") as f:
 
-    f.write(f"Model: {name}\n")
-    f.write(f"RMSE: {rmse}\n")
-    f.write(f"MAE: {mae}\n")
-    f.write(f"R2: {r2}\n")
-    f.write(f"OOB: {model.oob_score_}\n\n")
+        f.write(f"Model: {name}\n")
+        f.write(f"RMSE: {rmse}\n")
+        f.write(f"MAE: {mae}\n")
+        f.write(f"R2: {r2}\n")
+        f.write(f"OOB: {model.oob_score_}\n\n")
 
-    f.write("Top Features:\n")
-    f.write(str(importance.head(15)))
-    
+        f.write("Top Features:\n")
+        f.write(str(importance.head(15)))
+
 
 # ---------------------------
 # Train models
