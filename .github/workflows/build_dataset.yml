@@ -51,7 +51,7 @@ jobs:
 
           git stash pop || true
 
-          git add data/training_dataset.csv
+          git add data/training_dataset.csv.gz
 
           if git diff --cached --quiet; then
             echo "No dataset changes"
