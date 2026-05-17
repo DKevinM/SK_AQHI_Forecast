@@ -15,13 +15,11 @@ from sklearn.metrics import (
 # ---------------------------
 # Load dataset
 # ---------------------------
-data = pd.read_csv("data/training_dataset.csv")
+data = pd.read_csv("data/training_dataset.csv.gz")
 print("Rows:", len(data))
 print("Columns:", data.columns)
 
-# ---------------------------
-# Targets (1 hour forecast)
-# ---------------------------
+data = data.dropna()
 
 
 
@@ -106,6 +104,8 @@ def train_model(target, name):
         index=feature_cols
     ).sort_values(ascending=False)
     
+    importance.to_csv(f"models/{name}_importance.csv")
+    
     print(f"\nTop features for {name}:")
     print(importance.head(10))
 
@@ -118,7 +118,17 @@ def train_model(target, name):
     print("MAE:", mae)
     print("R²:", r2)
 
+with open(f"models/{name}_metrics.txt", "w") as f:
 
+    f.write(f"Model: {name}\n")
+    f.write(f"RMSE: {rmse}\n")
+    f.write(f"MAE: {mae}\n")
+    f.write(f"R2: {r2}\n")
+    f.write(f"OOB: {model.oob_score_}\n\n")
+
+    f.write("Top Features:\n")
+    f.write(str(importance.head(15)))
+    
 
 # ---------------------------
 # Train models
