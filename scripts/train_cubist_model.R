@@ -5,7 +5,11 @@ dir.create("models", showWarnings = FALSE)
 # -----------------------------------
 # Load dataset
 # -----------------------------------
-data <- read.csv("data/training_dataset.csv")
+data <- read.csv(
+  gzfile("data/training_dataset.csv.gz")
+)
+
+data <- na.omit(data)
 
 cat("Rows:", nrow(data), "\n")
 cat("Columns:\n")
@@ -76,7 +80,11 @@ train_model <- function(target, name){
 
   rmse <- sqrt(mean((pred - y_test)^2))
   mae <- mean(abs(pred - y_test))
-  r2 <- cor(pred, y_test)^2
+  r2 <- cor(
+    pred,
+    y_test,
+    use = "complete.obs"
+  )^2
 
   cat("\n====================\n")
   cat(name, "\n")
@@ -84,6 +92,22 @@ train_model <- function(target, name){
   cat("RMSE:", rmse, "\n")
   cat("MAE :", mae, "\n")
   cat("R²  :", r2, "\n")
+
+
+  writeLines(
+    c(
+      paste("Model:", name),
+      paste("RMSE:", rmse),
+      paste("MAE:", mae),
+      paste("R2:", r2)
+    ),
+    paste0("models/", name, "_cubist_metrics.txt")
+  )
+  
+  capture.output(
+    summary(model),
+    file = paste0("models/", name, "_cubist_summary.txt")
+  )  
 
   saveRDS(
     model,
