@@ -59,7 +59,7 @@ jobs:
 
       - name: Compress model files
         run: |
-          tar -czf models/models.tar.gz models/
+          tar -czf models.tar.gz models/
 
       - name: Commit trained models
         run: |
@@ -70,6 +70,7 @@ jobs:
           find models -name "*.rds" -delete
 
           git add models/
+          git add models.tar.gz
 
           if git diff --cached --quiet; then
             echo "No model changes"
