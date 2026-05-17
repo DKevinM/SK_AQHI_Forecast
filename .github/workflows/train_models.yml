@@ -57,10 +57,17 @@ jobs:
           git config --global http.postBuffer 524288000
           git config --global core.compression 0
 
+      - name: Compress model files
+        run: |
+          tar -czf models/models.tar.gz models/
+
       - name: Commit trained models
         run: |
           git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.email "github.com"
+
+          find models -name "*.pkl" -delete
+          find models -name "*.rds" -delete
 
           git add models/
 
