@@ -195,7 +195,11 @@ data = data.dropna()
 # ------------------------------------------------
 # Save dataset
 # ------------------------------------------------
-data.to_csv("data/training_dataset.csv",index=False)
+data.to_csv(
+    "data/training_dataset.csv.gz",
+    index=False,
+    compression="gzip"
+)
 print("Training dataset built")
 
 
