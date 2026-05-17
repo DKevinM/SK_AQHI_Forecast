@@ -3,9 +3,13 @@ import numpy as np
 import glob
 from pathlib import Path
 
-DATA_DIR = Path("dataSK")
+DATA_DIR = Path("SK_csv")
 
 files = glob.glob(str(DATA_DIR / "*.csv"))
+
+print("Files found:")
+print(files)
+
 
 dfs = []
 
