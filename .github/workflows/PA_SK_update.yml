@@ -11,7 +11,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'scripts/**'
+      - 'web/**'
       - '.github/workflows/**'
       - 'SK_PA_latest.py'
 
@@ -65,7 +65,7 @@ jobs:
 
             git reset --hard origin/main
 
-            python scripts/SK_PA_latest.py
+            python web/SK_PA_latest.py
 
             git add dataSK/SK_PM25_map.json
 
