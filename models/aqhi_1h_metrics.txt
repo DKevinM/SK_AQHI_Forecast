@@ -1,0 +1,23 @@
+Model: aqhi_1h
+RMSE: 0.1552324186864794
+MAE: 0.07916192032191159
+R2: 0.9780462518967661
+OOB: 0.973398139678111
+
+Top Features:
+AQHI              0.262611
+AQHI_lag1         0.202001
+AQHI_lag2         0.144434
+PM25              0.099464
+AQHI_lag3         0.094493
+AQHI_lag6         0.041247
+AQHI_change_3h    0.035969
+AQHI_change_1h    0.030959
+AQHI_lag24        0.027621
+AQHI_lag12        0.018719
+O3                0.018201
+NO2               0.011300
+RH                0.003344
+sin_doy           0.002837
+TEMP              0.002798
+dtype: float64
