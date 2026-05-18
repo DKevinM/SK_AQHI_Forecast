@@ -1,4 +1,4 @@
-name: PA_SK_update
+name: SK_PA_hourly_update
 
 permissions:
   contents: write
