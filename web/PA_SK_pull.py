@@ -118,7 +118,7 @@ print(f"Active sensors written to CSV: {len(inside_live)}")
 
 # 8) Push sensor metadata into Supabase
 supabase = create_client(
-    os.getenv("SUPABASE_DB_URL"),
+    os.getenv("SUPABASE_URL"),
     os.getenv("SUPABASE_SERVICE_KEY")
 )
 
