@@ -48,6 +48,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
 
           git add data/current_map.geojson
+          git add data/current_features.csv
 
           if git diff --cached --quiet; then
             echo "No changes"
