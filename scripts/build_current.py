@@ -146,6 +146,12 @@ df = df.dropna(subset=[
 # ---- KEEP LATEST FORECAST ROW ----
 latest = df.groupby("station").tail(1)
 
+# ---- SAVE FEATURE TABLE ----
+latest.to_csv(
+    "data/current_features.csv",
+    index=False
+)
+
 
 # ---- BUILD GEOJSON FEATURES ----
 features = []
