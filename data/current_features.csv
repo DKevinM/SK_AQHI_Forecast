@@ -1,0 +1,1 @@
+station,datetime,PM25,NO2,O3,WS,WD,TEMP,RH,AQHI,geometry,AQHI_lag1,AQHI_lag2,AQHI_lag3,AQHI_lag6,AQHI_lag12,AQHI_lag24,AQHI_change_1h,AQHI_change_3h,hour,doy,sin_hour,cos_hour,sin_doy,cos_doy
