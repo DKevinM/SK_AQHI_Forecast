@@ -39,7 +39,7 @@ jobs:
           pip install pandas requests pytz supabase geopandas
       
       - name: Run PurpleAir data collection
-        run: python  SK_PA_latest.py
+        run: python  web/SK_PA_latest.py
         env:
           PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
