@@ -79,9 +79,9 @@ def train_model(target, name):
     y_test  = y.iloc[split_index:]
 
     model = RandomForestRegressor(
-        n_estimators=300,
-        max_depth=15,
-        min_samples_leaf=5,
+        n_estimators=150,
+        max_depth=10,
+        min_samples_leaf=10,
         max_features="sqrt",
         oob_score=True,
         n_jobs=-1,
