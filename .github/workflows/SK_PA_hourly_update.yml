@@ -11,9 +11,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'web/**'
-      - '.github/workflows/**'
-      - 'SK_PA_latest.py'
+      - 'web/SK_PA_latest.py'
 
 concurrency:
   group: sk-purpleair-update
