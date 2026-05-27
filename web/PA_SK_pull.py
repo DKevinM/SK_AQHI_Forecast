@@ -10,7 +10,7 @@ from supabase import create_client
 
 
 # 1) Load Saskatchewan boundary
-sk = gpd.read_file("dataSK/SK.shp")
+sk = gpd.read_file("data/SK.shp")
 
 # Make sure it’s in WGS84 (lat/lon) for the API bbox
 if sk.crs is None or sk.crs.to_epsg() != 4326:
@@ -108,7 +108,7 @@ inside_no_geom = pd.DataFrame(inside.drop(columns="geometry"))
 
 # Save only recently active sensors for downstream live PurpleAir pulls
 inside_live = inside_no_geom[inside_no_geom["active_30d"] == True].copy()
-inside_live.to_csv("dataSK/SK_PA_sensors.csv", index=False)
+inside_live.to_csv("data/SK_PA_sensors.csv", index=False)
 
 print(f"Total sensors from API: {len(gdf)}")
 print(f"Sensors inside Saskatchewan: {len(inside_no_geom)}")
