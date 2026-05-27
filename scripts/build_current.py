@@ -213,6 +213,16 @@ print("=== END FEATURE VALIDATION ===\n")
 
 
 
+print("\n=== GEOJSON INPUT CHECK ===")
+print("Latest rows:", len(latest))
+print(latest[[
+    "station",
+    "AQHI",
+    "AQHI_lag1",
+    "geometry"
+]].head())
+print("=== END CHECK ===\n")
+
 
 
 # ---- BUILD GEOJSON FEATURES ----
@@ -220,6 +230,8 @@ features = []
 
 for _, row in latest.iterrows():
 
+    print("Building feature for:", row["station"])    
+    
     feature = {
         "type": "Feature",
 
@@ -263,7 +275,8 @@ for _, row in latest.iterrows():
 
             # Timestamp
             "updated": row["datetime"].isoformat()
-            
+
+
         }
     }
 
