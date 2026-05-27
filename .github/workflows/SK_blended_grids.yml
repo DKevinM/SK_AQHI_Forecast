@@ -13,7 +13,7 @@ on:
       - '.github/workflows/SK_blended_grids.yml'
       - 'models/**'
       - 'data/stations.csv'
-      - 'dataSK/SK.*'
+      - 'data/SK.*'
 
 permissions:
   contents: write
