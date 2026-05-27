@@ -102,6 +102,23 @@ for f in data["features"]:
 
 df = pd.DataFrame(rows)
 
+print("\n=== RAW DATAFRAME CHECK ===")
+print("Total rows pulled:", len(df))
+print("Unique stations:", df["station"].nunique())
+
+print(df[[
+    "station",
+    "datetime",
+    "PM25",
+    "NO2",
+    "O3",
+    "AQHI"
+]].head())
+
+print("Missing AQHI:", df["AQHI"].isna().sum())
+print("=== END RAW CHECK ===\n")
+
+
 
 # ---- SORT TEMPORALLY ----
 df = df.sort_values(["station", "datetime"])
@@ -132,6 +149,25 @@ df["sin_doy"] = np.sin(2*np.pi*df["doy"]/365)
 df["cos_doy"] = np.cos(2*np.pi*df["doy"]/365)
 
 
+
+
+print("\n=== BEFORE DROPNA ===")
+print("Rows:", len(df))
+print("Stations:", df["station"].nunique())
+
+for c in [
+    "AQHI",
+    "AQHI_lag1",
+    "AQHI_lag2",
+    "AQHI_lag3",
+    "AQHI_lag6"
+]:
+    print(c, "missing =", df[c].isna().sum())
+
+print("=== END BEFORE DROPNA ===\n")
+
+
+
 # ---- REQUIRE COMPLETE LAG HISTORY ----
 df = df.dropna(subset=[
     "AQHI_lag1",
@@ -141,6 +177,25 @@ df = df.dropna(subset=[
     # "AQHI_lag12",
     # "AQHI_lag24"
 ])
+
+
+
+
+print("\n=== AFTER DROPNA ===")
+print("Rows:", len(df))
+print("Stations:", df["station"].nunique())
+
+if len(df) > 0:
+    print(df[[
+        "station",
+        "AQHI",
+        "AQHI_lag1",
+        "AQHI_lag6"
+    ]].head())
+
+print("=== END AFTER DROPNA ===\n")
+
+
 
 
 # ---- KEEP LATEST FORECAST ROW ----
