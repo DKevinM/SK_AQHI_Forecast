@@ -55,6 +55,8 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
 
+          git pull --rebase origin main
+
           git add data/current_features.csv
           git add data/current_map.geojson
           git add data/sk_current_blend.geojson
@@ -64,5 +66,4 @@ jobs:
           git add data/station_forecast_3h_debug.csv
 
           git commit -m 'Update SK blended AQHI grids' || echo 'No changes to commit'
-          git pull --rebase origin main
           git push origin main
