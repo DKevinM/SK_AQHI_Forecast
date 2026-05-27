@@ -253,13 +253,13 @@ def main():
     
     # Load your static sensor list from CSV
     try:
-        sensor_df = pd.read_csv("dataSK/SK_PA_sensors.csv")
+        sensor_df = pd.read_csv("data/SK_PA_sensors.csv")
         sensor_df["sensor_index"] = pd.to_numeric(sensor_df["sensor_index"], errors="coerce")
         sensor_df = sensor_df.dropna(subset=["sensor_index"])
         sensor_df["sensor_index"] = sensor_df["sensor_index"].astype("int64")
         print(f"Loaded {len(sensor_df)} sensors from CSV")
     except FileNotFoundError:
-        print("Error: dataSK/SK_PA_sensors.csv not found")
+        print("Error: data/SK_PA_sensors.csv not found")
         sys.exit(1)
 
         
@@ -493,7 +493,7 @@ def main():
     push_to_supabase(result)
 
     # Ensure data directory exists
-    os.makedirs("dataSK", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
 
     # --- Convert to GeoJSON ---
     features = []
@@ -534,7 +534,7 @@ def main():
     }
     
     # Save GeoJSON
-    with open("dataSK/SK_PM25_map.json", "w") as f:
+    with open("data/SK_PM25_map.json", "w") as f:
         json.dump(geojson, f, indent=2)
     
     print(f"Saved {len(features)} features to GeoJSON")
