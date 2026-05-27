@@ -245,9 +245,74 @@ def load_current_station_features() -> pd.DataFrame:
         )
 
     df = pd.read_csv(CURRENT_FEATURES)
+    
     if df.empty:
-        raise ValueError(f"{CURRENT_FEATURES} is empty. Current pull produced no model-ready station rows.")
+        print(f"{CURRENT_FEATURES} is empty. Falling back to {CURRENT_MAP}.")
+    
+        if not CURRENT_MAP.exists():
+            raise ValueError(
+                f"{CURRENT_FEATURES} is empty and {CURRENT_MAP} does not exist."
+            )
+    
+        with open(CURRENT_MAP, "r", encoding="utf-8") as f:
+            current_geo = json.load(f)
+    
+        rows = []
+    
+        for feat in current_geo.get("features", []):
+    
+            props = feat.get("properties", {}) or {}
+            geom = feat.get("geometry", {}) or {}
+            coords = geom.get("coordinates", [None, None])
+    
+            lon = clean_num(coords[0])
+            lat = clean_num(coords[1])
+    
+            aqhi = clean_num(props.get("AQHI") or props.get("aqhi"))
+    
+            if lon is None or lat is None or aqhi is None:
+                continue
+    
+            rows.append({
+                "station": props.get("station") or props.get("COMMUNITY") or props.get("name"),
+                "AQHI": aqhi,
+                "PM25": clean_num(props.get("PM25") or props.get("PM2_5")),
+                "O3": clean_num(props.get("O3")),
+                "NO2": clean_num(props.get("NO2")),
+                "WS": clean_num(props.get("WS")),
+                "WD": clean_num(props.get("WD")),
+                "TEMP": clean_num(props.get("TEMP")),
+                "RH": clean_num(props.get("RH")),
+                "geometry": geom,
+                "lat": lat,
+                "lon": lon,
+            })
+    
+        df = pd.DataFrame(rows)
+    
+        if df.empty:
+            raise ValueError(
+                f"{CURRENT_MAP} exists but produced no usable station rows."
+            )
+    
+        # Operational fallback: use current AQHI as lag persistence.
+        for lag in ["AQHI_lag1", "AQHI_lag2", "AQHI_lag3", "AQHI_lag6", "AQHI_lag12", "AQHI_lag24"]:
+            df[lag] = df["AQHI"]
+    
+        df["AQHI_change_1h"] = 0
+        df["AQHI_change_3h"] = 0
+    
+        now = datetime.now(timezone.utc)
+        df["hour"] = now.hour
+        df["doy"] = now.timetuple().tm_yday
+    
+        df["sin_hour"] = np.sin(2 * np.pi * df["hour"] / 24)
+        df["cos_hour"] = np.cos(2 * np.pi * df["hour"] / 24)
+    
+        df["sin_doy"] = np.sin(2 * np.pi * df["doy"] / 365)
+        df["cos_doy"] = np.cos(2 * np.pi * df["doy"] / 365)
 
+    
     stations_meta = pd.read_csv(STATIONS_CSV) if STATIONS_CSV.exists() else pd.DataFrame()
 
     # Normalize station matching fields.
