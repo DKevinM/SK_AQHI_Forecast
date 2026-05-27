@@ -146,6 +146,21 @@ df = df.dropna(subset=[
 # ---- KEEP LATEST FORECAST ROW ----
 latest = df.groupby("station").tail(1)
 
+print("\n=== LATEST CHECK ===")
+print("Rows in latest:", len(latest))
+print(latest[[
+    "station",
+    "AQHI",
+    "AQHI_lag1",
+    "AQHI_lag6",
+    "AQHI_lag12",
+    "AQHI_lag24"
+]].head())
+
+print("Missing lag12:", latest["AQHI_lag12"].isna().sum())
+print("Missing lag24:", latest["AQHI_lag24"].isna().sum())
+print("=== END LATEST CHECK ===\n")
+
 # ---- SAVE FEATURE TABLE ----
 latest.to_csv(
     "data/current_features.csv",
@@ -233,8 +248,8 @@ for _, row in latest.iterrows():
             "AQHI_lag2": row["AQHI_lag2"],
             "AQHI_lag3": row["AQHI_lag3"],
             "AQHI_lag6": row["AQHI_lag6"],
-            "AQHI_lag12": row["AQHI_lag12"],
-            "AQHI_lag24": row["AQHI_lag24"],
+            # "AQHI_lag12": row["AQHI_lag12"],
+            # "AQHI_lag24": row["AQHI_lag24"],
 
             # Changes
             "AQHI_change_1h": row["AQHI_change_1h"],
@@ -248,6 +263,7 @@ for _, row in latest.iterrows():
 
             # Timestamp
             "updated": row["datetime"].isoformat()
+            
         }
     }
 
