@@ -1,7 +1,7 @@
 """
 SK_regina_blended_grid.py
 
-Builds four AQHI surface products for SK_AQHI_Forecast:
+Builds four AQHI surface products for SK_datapull:
 
 1. data/sk_current_blend.geojson
 2. data/sk_forecast_3h_blend.geojson
