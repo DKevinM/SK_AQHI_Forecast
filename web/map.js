@@ -77,7 +77,7 @@ var smoke24 = loadSmokeLayer(
 
 
 var pm25Layer = loadPM25Layer(
-  "https://raw.githubusercontent.com/dkevinm/AB_datapull/main/dataSK/SK_PM25_map.json"
+  "https://raw.githubusercontent.com/dkevinm/AB_datapull/main/data/SK_PM25_map.json"
 );
 
 
