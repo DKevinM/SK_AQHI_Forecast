@@ -24,7 +24,7 @@ r = requests.get(
         "outFields": "COMMUNITY,PM2_5,NO2,O3,WS,WD,TEMP,RH,DATETIME",
         "orderByFields": "COMMUNITY ASC, DATETIME DESC",
         "f": "geojson",
-        "resultRecordCount": 5000
+        "resultRecordCount": 10000
     }
 )
 
@@ -138,8 +138,8 @@ df = df.dropna(subset=[
     "AQHI_lag2",
     "AQHI_lag3",
     "AQHI_lag6",
-    "AQHI_lag12",
-    "AQHI_lag24"
+    # "AQHI_lag12",
+    # "AQHI_lag24"
 ])
 
 
