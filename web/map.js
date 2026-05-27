@@ -79,13 +79,91 @@ var smoke24 = loadSmokeLayer(
 var pm25Layer = loadPM25Layer(
   "https://raw.githubusercontent.com/dkevinm/AB_datapull/main/dataSK/SK_PM25_map.json"
 );
-   
+
+
+// =====================================================
+// AQHI GRID STYLE
+// =====================================================
+
+function aqhiGridStyle(feature){
+  return {
+    fillColor: feature.properties.color || "#808080",
+    weight: 0,
+    color: "none",
+    fillOpacity: 0.45
+  };
+}
+    
+// =====================================================
+// LOAD AQHI GRID
+// =====================================================
+
+function loadAQHIGrid(url){
+  var layer = L.layerGroup();
+  fetch(url + "?v=" + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      console.log("AQHI Grid loaded:", url);
+      L.geoJSON(data, {
+        style: aqhiGridStyle,
+        onEachFeature: function(feature, layer){
+          const aqhi =
+            feature.properties.AQHI ??
+            feature.properties.aqhi ??
+            "N/A";
+          const type =
+            feature.properties.type ??
+            "AQHI";
+          layer.bindTooltip(
+            type.toUpperCase() +
+            "<br>AQHI: " + aqhi
+          );
+        }
+      }).addTo(layer);
+    })
+    .catch(err => {
+      console.error("AQHI grid failed:", url, err);
+    });
+  return layer;
+}
+
+
+// =====================================================
+// AQHI GRID LAYERS
+// =====================================================
+
+var skCurrentGrid = loadAQHIGrid(
+"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/sk_current_blend.geojson"
+);
+
+var skForecastGrid = loadAQHIGrid(
+"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/sk_forecast_3h_blend.geojson"
+);
+
+var reginaCurrentGrid = loadAQHIGrid(
+"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/regina_current_blend.geojson"
+);
+
+var reginaForecastGrid = loadAQHIGrid(
+"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/regina_forecast_3h_blend.geojson"
+);
+
+    
 var overlays = {
+
+  "SK Current AQHI": skCurrentGrid,
+  "SK Forecast AQHI": skForecastGrid,
+
+  "Regina Current AQHI": reginaCurrentGrid,
+  "Regina Forecast AQHI": reginaForecastGrid,
+
   "Smoke Now": smoke0,
   "Smoke +6 hr": smoke6,
   "Smoke +12 hr": smoke12,
   "Smoke +24 hr": smoke24,
+
   "PM2.5 Sensors": pm25Layer
+
 };
 
 
