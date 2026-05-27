@@ -11,7 +11,7 @@ OUTPUT = Path("data/current_map.geojson")
 
 # ---- TIME WINDOW (last 3 hours) ----
 now_utc = datetime.now(timezone.utc)
-cutoff = now_utc - timedelta(hours=30)
+cutoff = now_utc - timedelta(hours=96)
 
 start_ms = int(cutoff.timestamp() * 1000)
 end_ms = int(now_utc.timestamp() * 1000)
