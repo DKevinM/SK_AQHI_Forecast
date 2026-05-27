@@ -153,6 +153,53 @@ latest.to_csv(
 )
 
 
+
+
+# ---- FEATURE VALIDATION ----
+
+print("\n=== FEATURE VALIDATION ===")
+
+required = [
+    "AQHI",
+    "AQHI_lag1",
+    "AQHI_lag2",
+    "AQHI_lag3",
+    "AQHI_lag6",
+    "AQHI_lag12",
+    "AQHI_lag24",
+    "AQHI_change_1h",
+    "AQHI_change_3h",
+    "PM25",
+    "O3",
+    "NO2",
+    "WS",
+    "TEMP",
+    "RH",
+    "sin_hour",
+    "cos_hour",
+    "sin_doy",
+    "cos_doy"
+]
+
+for c in required:
+
+    if c not in latest.columns:
+        print(f"MISSING COLUMN: {c}")
+        continue
+
+    print(
+        f"{c:20s}",
+        "dtype=", latest[c].dtype,
+        "missing=", int(latest[c].isna().sum()),
+        "sample=", latest[c].dropna().head(3).tolist()
+    )
+
+print("=== END FEATURE VALIDATION ===\n")
+
+
+
+
+
 # ---- BUILD GEOJSON FEATURES ----
 features = []
 
