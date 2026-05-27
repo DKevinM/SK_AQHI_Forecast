@@ -52,7 +52,7 @@ except Exception:  # pragma: no cover
 
 ROOT = Path(".")
 DATA_DIR = ROOT / "data"
-DATA_SK_DIR = ROOT / "dataSK"
+DATA_SK_DIR = ROOT / "data"
 MODELS_DIR = ROOT / "models"
 
 CURRENT_FEATURES = DATA_DIR / "current_features.csv"
