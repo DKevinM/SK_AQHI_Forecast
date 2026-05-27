@@ -1,0 +1,79 @@
+name: Regina Blended AQHI Grid
+
+on:
+
+  schedule:
+    - cron: '20 * * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regina-blended-grid
+  cancel-in-progress: true
+
+jobs:
+
+  build-grid:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # =====================================================
+      # PYTHON
+      # =====================================================
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # =====================================================
+      # INSTALL
+      # =====================================================
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+          pip install \
+            pandas \
+            numpy \
+            geopandas \
+            shapely \
+            requests \
+            joblib \
+            scikit-learn \
+            pyogrio \
+            fiona
+
+      # =====================================================
+      # BUILD REGINA BLENDED GRID
+      # =====================================================
+
+      - name: Generate Regina blended AQHI grids
+        run: |
+          python web/SK_regina_blended_grid.py
+
+      # =====================================================
+      # COMMIT OUTPUTS
+      # =====================================================
+
+      - name: Commit updated grids
+        run: |
+
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          git add data/regina_current_blend.geojson
+          git add data/regina_forecast_blend.geojson
+
+          git commit -m "Update Regina blended AQHI grids" || echo "No changes"
+
+          git push
