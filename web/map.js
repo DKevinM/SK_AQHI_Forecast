@@ -133,19 +133,19 @@ function loadAQHIGrid(url){
 // =====================================================
 
 var skCurrentGrid = loadAQHIGrid(
-"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/sk_current_blend.geojson"
+"https://raw.githubusercontent.com/DKevinM/SK_datapull/main/data/sk_current_blend.geojson"
 );
 
 var skForecastGrid = loadAQHIGrid(
-"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/sk_forecast_3h_blend.geojson"
+"https://raw.githubusercontent.com/DKevinM/SK_datapull/main/data/sk_forecast_3h_blend.geojson"
 );
 
 var reginaCurrentGrid = loadAQHIGrid(
-"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/regina_current_blend.geojson"
+"https://raw.githubusercontent.com/DKevinM/SK_datapull/main/data/regina_current_blend.geojson"
 );
 
 var reginaForecastGrid = loadAQHIGrid(
-"https://raw.githubusercontent.com/DKevinM/SK_AQHI_Forecast/main/data/regina_forecast_3h_blend.geojson"
+"https://raw.githubusercontent.com/DKevinM/SK_datapull/main/data/regina_forecast_3h_blend.geojson"
 );
 
     
