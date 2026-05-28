@@ -25,9 +25,9 @@ RAW_APIS = {
 
     "Prince Albert":
         "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Prince_Albert_Ambient_Air_Quality_Raw/FeatureServer/0/query",
-
+    
     "Estevan":
-        "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Estevan_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+        "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Estevan_Historical_Ambient_Air_Quality_Raw/FeatureServer/0/query",
 
     "Swift Current":
         "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Swift_Current_Ambient_Air_Quality_Raw/FeatureServer/0/query",
