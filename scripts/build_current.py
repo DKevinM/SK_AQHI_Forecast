@@ -96,13 +96,13 @@ def calc_aqhi(pm25, no2, o3):
 print("\n=== PULLING CURRENT STATIONS ===")
 
 r = requests.get(
-    CURRENT_API,
+    api,
     params={
         "where": "1=1",
-        "outFields": "COMMUNITY,DATETIME",
-        "returnGeometry": "true",
-        "outSR": "4326",
-        "f": "geojson"
+        "outFields": "*",
+        "orderByFields": "DATETIME DESC",
+        "resultRecordCount": 2000,
+        "f": "json"
     }
 )
 
@@ -186,6 +186,8 @@ df = pd.DataFrame(rows)
 
 if len(df) == 0:
     raise SystemExit("NO HISTORICAL DATA RETURNED")
+
+df = df[df["datetime"] >= cutoff]
     
 print("\n=== RAW DATAFRAME CHECK ===")
 print("Total rows:", len(df))
