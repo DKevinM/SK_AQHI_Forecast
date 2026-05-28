@@ -32,7 +32,7 @@ OUTPUT = Path("data/current_map.geojson")
 # =========================================================
 
 now_utc = datetime.now(timezone.utc)
-cutoff = now_utc - timedelta(hours=96)
+cutoff = now_utc - timedelta(hours=36)
 
 start_ms = int(cutoff.timestamp() * 1000)
 
@@ -173,6 +173,9 @@ for station, api in RAW_APIS.items():
 
 df = pd.DataFrame(rows)
 
+if len(df) == 0:
+    raise SystemExit("NO HISTORICAL DATA RETURNED")
+    
 print("\n=== RAW DATAFRAME CHECK ===")
 print("Total rows:", len(df))
 print("Stations:", df["station"].nunique())
