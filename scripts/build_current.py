@@ -6,125 +6,187 @@ import math
 import pandas as pd
 import numpy as np
 
-API = "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Hourly_Ambient_Air_Quality/FeatureServer/0/query"
+# =========================================================
+# CURRENT STATION GEOMETRY
+# =========================================================
+
+CURRENT_API = "https://services3.arcgis.com/zcv98lgAl8xQ04cW/ArcGIS/rest/services/Hourly_Ambient_Air_Quality/FeatureServer/0/query"
+
+# =========================================================
+# HISTORICAL RAW TABLES
+# =========================================================
+
+RAW_APIS = {
+    "Regina": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Regina_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+    "Saskatoon": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Saskatoon_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+    "Prince Albert": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Prince_Albert_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+    "Estevan": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Estevan_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+    "Swift Current": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Swift_Current_Ambient_Air_Quality_Raw/FeatureServer/0/query",
+    "Buffalo Narrows": "https://services3.arcgis.com/zcv98lgAl8xQ04cW/arcgis/rest/services/Buffalo_Narrows_Ambient_Air_Quality_Raw/FeatureServer/0/query"
+}
+
 OUTPUT = Path("data/current_map.geojson")
 
-# ---- TIME WINDOW (last 3 hours) ----
+# =========================================================
+# TIME WINDOW
+# =========================================================
+
 now_utc = datetime.now(timezone.utc)
 cutoff = now_utc - timedelta(hours=96)
 
 start_ms = int(cutoff.timestamp() * 1000)
-end_ms = int(now_utc.timestamp() * 1000)
 
-# ---- API REQUEST ----
-r = requests.get(
-    API,
-    params={
-        "time": f"{start_ms},{end_ms}",
-        "outFields": "COMMUNITY,PM2_5,NO2,O3,WS,WD,TEMP,RH,DATETIME",
-        "orderByFields": "COMMUNITY ASC, DATETIME DESC",
-        "f": "geojson",
-        "resultRecordCount": 10000
-    }
-)
+# =========================================================
+# CLEANER
+# =========================================================
 
-print("Status:", r.status_code)
-
-data = r.json()
-
-if "features" not in data:
-    print("API RESPONSE ERROR:")
-    print(data)
-    raise SystemExit("No features returned")
-
-# ---- CLEANER ----
 def clean_val(x):
     try:
         x = float(x)
+
         if x <= -999:
             return None
+
         return round(x, 1)
+
     except:
         return None
 
-# ---- AQHI FUNCTION ----
+# =========================================================
+# AQHI
+# =========================================================
+
 def calc_aqhi(pm25, no2, o3):
+
     try:
+
         if None in [pm25, no2, o3]:
             return None
 
-        aqhi = (10/10.4) * (100*(
-            math.exp(0.000871 * no2) +
-            math.exp(0.000537 * o3) +
-            math.exp(0.000487 * pm25) - 3
-        ))
+        aqhi = (10/10.4) * (
+            100 * (
+                math.exp(0.000871 * no2) +
+                math.exp(0.000537 * o3) +
+                math.exp(0.000487 * pm25) - 3
+            )
+        )
 
         aqhi = round(aqhi)
+
         return max(1, min(10, aqhi))
+
     except:
         return None
 
+# =========================================================
+# GET CURRENT GEOMETRY
+# =========================================================
 
+print("\n=== PULLING CURRENT STATIONS ===")
 
-# ---- BUILD DATAFRAME ----
-rows = []
+r = requests.get(
+    CURRENT_API,
+    params={
+        "where": "1=1",
+        "outFields": "COMMUNITY,DATETIME",
+        "returnGeometry": "true",
+        "outSR": "4326",
+        "f": "geojson"
+    }
+)
 
-for f in data["features"]:
+current_data = r.json()
+
+station_geometry = {}
+
+for f in current_data["features"]:
 
     p = f["properties"]
 
-    pm25 = clean_val(p.get("PM2_5"))
-    no2  = clean_val(p.get("NO2"))
-    o3   = clean_val(p.get("O3"))
+    station_geometry[p["COMMUNITY"]] = f["geometry"]
 
-    rows.append({
+print("Current geometry stations:", len(station_geometry))
 
-        "station": p["COMMUNITY"],
+# =========================================================
+# PULL RAW HISTORICAL DATA
+# =========================================================
 
-        "datetime": datetime.fromtimestamp(
-            p["DATETIME"]/1000,
-            timezone.utc
-        ),
+rows = []
 
-        "PM25": pm25,
-        "NO2": no2,
-        "O3": o3,
+for station, api in RAW_APIS.items():
 
-        "WS": clean_val(p.get("WS")),
-        "WD": clean_val(p.get("WD")),
-        "TEMP": clean_val(p.get("TEMP")),
-        "RH": clean_val(p.get("RH")),
+    print(f"\n=== PULLING {station} ===")
 
-        "AQHI": calc_aqhi(pm25, no2, o3),
+    r = requests.get(
+        api,
+        params={
+            "where": f"DATETIME >= {start_ms}",
+            "outFields": "*",
+            "orderByFields": "DATETIME ASC",
+            "resultRecordCount": 2000,
+            "f": "json"
+        }
+    )
 
-        "geometry": f["geometry"]
-    })
+    data = r.json()
+
+    if "features" not in data:
+        print("FAILED:", station)
+        continue
+
+    print("Rows returned:", len(data["features"]))
+
+    for f in data["features"]:
+
+        a = f["attributes"]
+
+        pm25 = clean_val(a.get("PM2_5"))
+        no2  = clean_val(a.get("NO2"))
+        o3   = clean_val(a.get("O3"))
+
+        rows.append({
+
+            "station": station,
+
+            "datetime": datetime.fromtimestamp(
+                a["DATETIME"] / 1000,
+                timezone.utc
+            ),
+
+            "PM25": pm25,
+            "NO2": no2,
+            "O3": o3,
+
+            "WS": clean_val(a.get("WS")),
+            "WD": clean_val(a.get("WD")),
+            "TEMP": clean_val(a.get("TEMP")),
+            "RH": clean_val(a.get("RH")),
+
+            "AQHI": calc_aqhi(pm25, no2, o3),
+
+            "geometry": station_geometry.get(station)
+        })
+
+# =========================================================
+# DATAFRAME
+# =========================================================
 
 df = pd.DataFrame(rows)
 
 print("\n=== RAW DATAFRAME CHECK ===")
-print("Total rows pulled:", len(df))
-print("Unique stations:", df["station"].nunique())
+print("Total rows:", len(df))
+print("Stations:", df["station"].nunique())
 
-print(df[[
-    "station",
-    "datetime",
-    "PM25",
-    "NO2",
-    "O3",
-    "AQHI"
-]].head())
+# =========================================================
+# SORT
+# =========================================================
 
-print("Missing AQHI:", df["AQHI"].isna().sum())
-print("=== END RAW CHECK ===\n")
-
-
-
-# ---- SORT TEMPORALLY ----
 df = df.sort_values(["station", "datetime"])
 
+# =========================================================
+# LAGS
+# =========================================================
 
-# ---- LAG FEATURES ----
 df["AQHI_lag1"]  = df.groupby("station")["AQHI"].shift(1)
 df["AQHI_lag2"]  = df.groupby("station")["AQHI"].shift(2)
 df["AQHI_lag3"]  = df.groupby("station")["AQHI"].shift(3)
@@ -132,13 +194,17 @@ df["AQHI_lag6"]  = df.groupby("station")["AQHI"].shift(6)
 df["AQHI_lag12"] = df.groupby("station")["AQHI"].shift(12)
 df["AQHI_lag24"] = df.groupby("station")["AQHI"].shift(24)
 
+# =========================================================
+# CHANGES
+# =========================================================
 
-# ---- CHANGE FEATURES ----
 df["AQHI_change_1h"] = df["AQHI"] - df["AQHI_lag1"]
 df["AQHI_change_3h"] = df["AQHI"] - df["AQHI_lag3"]
 
+# =========================================================
+# TEMPORAL
+# =========================================================
 
-# ---- TEMPORAL FEATURES ----
 df["hour"] = df["datetime"].dt.hour
 df["doy"]  = df["datetime"].dt.dayofyear
 
@@ -148,146 +214,43 @@ df["cos_hour"] = np.cos(2*np.pi*df["hour"]/24)
 df["sin_doy"] = np.sin(2*np.pi*df["doy"]/365)
 df["cos_doy"] = np.cos(2*np.pi*df["doy"]/365)
 
+# =========================================================
+# DROP INCOMPLETE
+# =========================================================
 
-
-
-print("\n=== BEFORE DROPNA ===")
-print("Rows:", len(df))
-print("Stations:", df["station"].nunique())
-
-for c in [
-    "AQHI",
-    "AQHI_lag1",
-    "AQHI_lag2",
-    "AQHI_lag3",
-    "AQHI_lag6"
-]:
-    print(c, "missing =", df[c].isna().sum())
-
-print("=== END BEFORE DROPNA ===\n")
-
-
-
-# ---- REQUIRE COMPLETE LAG HISTORY ----
 df = df.dropna(subset=[
     "AQHI_lag1",
     "AQHI_lag2",
     "AQHI_lag3",
-    "AQHI_lag6",
-    # "AQHI_lag12",
-    # "AQHI_lag24"
+    "AQHI_lag6"
 ])
 
+print("\nRows after lag filtering:", len(df))
 
+# =========================================================
+# LATEST
+# =========================================================
 
-
-print("\n=== AFTER DROPNA ===")
-print("Rows:", len(df))
-print("Stations:", df["station"].nunique())
-
-if len(df) > 0:
-    print(df[[
-        "station",
-        "AQHI",
-        "AQHI_lag1",
-        "AQHI_lag6"
-    ]].head())
-
-print("=== END AFTER DROPNA ===\n")
-
-
-
-
-# ---- KEEP LATEST FORECAST ROW ----
 latest = df.groupby("station").tail(1)
 
-print("\n=== LATEST CHECK ===")
-print("Rows in latest:", len(latest))
-print(latest[[
-    "station",
-    "AQHI",
-    "AQHI_lag1",
-    "AQHI_lag6",
-    "AQHI_lag12",
-    "AQHI_lag24"
-]].head())
+print("\nLatest rows:", len(latest))
 
-print("Missing lag12:", latest["AQHI_lag12"].isna().sum())
-print("Missing lag24:", latest["AQHI_lag24"].isna().sum())
-print("=== END LATEST CHECK ===\n")
+# =========================================================
+# SAVE FEATURES
+# =========================================================
 
-# ---- SAVE FEATURE TABLE ----
-latest.to_csv(
-    "data/current_features.csv",
-    index=False
-)
+latest.to_csv("data/current_features.csv", index=False)
 
+# =========================================================
+# BUILD GEOJSON
+# =========================================================
 
-
-
-# ---- FEATURE VALIDATION ----
-
-print("\n=== FEATURE VALIDATION ===")
-
-required = [
-    "AQHI",
-    "AQHI_lag1",
-    "AQHI_lag2",
-    "AQHI_lag3",
-    "AQHI_lag6",
-    "AQHI_lag12",
-    "AQHI_lag24",
-    "AQHI_change_1h",
-    "AQHI_change_3h",
-    "PM25",
-    "O3",
-    "NO2",
-    "WS",
-    "TEMP",
-    "RH",
-    "sin_hour",
-    "cos_hour",
-    "sin_doy",
-    "cos_doy"
-]
-
-for c in required:
-
-    if c not in latest.columns:
-        print(f"MISSING COLUMN: {c}")
-        continue
-
-    print(
-        f"{c:20s}",
-        "dtype=", latest[c].dtype,
-        "missing=", int(latest[c].isna().sum()),
-        "sample=", latest[c].dropna().head(3).tolist()
-    )
-
-print("=== END FEATURE VALIDATION ===\n")
-
-
-
-print("\n=== GEOJSON INPUT CHECK ===")
-print("Latest rows:", len(latest))
-print(latest[[
-    "station",
-    "AQHI",
-    "AQHI_lag1",
-    "geometry"
-]].head())
-print("=== END CHECK ===\n")
-
-
-
-# ---- BUILD GEOJSON FEATURES ----
 features = []
 
 for _, row in latest.iterrows():
 
-    print("Building feature for:", row["station"])    
-    
     feature = {
+
         "type": "Feature",
 
         "geometry": row["geometry"],
@@ -296,49 +259,36 @@ for _, row in latest.iterrows():
 
             "station": row["station"],
 
-            # Current AQHI
             "AQHI": row["AQHI"],
 
-            # Pollutants
             "PM25": row["PM25"],
             "NO2": row["NO2"],
             "O3": row["O3"],
 
-            # Weather
             "WS": row["WS"],
             "WD": row["WD"],
             "TEMP": row["TEMP"],
             "RH": row["RH"],
 
-            # Lag features
             "AQHI_lag1": row["AQHI_lag1"],
             "AQHI_lag2": row["AQHI_lag2"],
             "AQHI_lag3": row["AQHI_lag3"],
             "AQHI_lag6": row["AQHI_lag6"],
-            # "AQHI_lag12": row["AQHI_lag12"],
-            # "AQHI_lag24": row["AQHI_lag24"],
 
-            # Changes
             "AQHI_change_1h": row["AQHI_change_1h"],
             "AQHI_change_3h": row["AQHI_change_3h"],
 
-            # Temporal terms
             "sin_hour": row["sin_hour"],
             "cos_hour": row["cos_hour"],
             "sin_doy": row["sin_doy"],
             "cos_doy": row["cos_doy"],
 
-            # Timestamp
             "updated": row["datetime"].isoformat()
-
-
         }
     }
 
     features.append(feature)
 
-
-# ---- OUTPUT ----
 geojson = {
     "type": "FeatureCollection",
     "features": features
@@ -349,4 +299,4 @@ OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 with open(OUTPUT, "w") as f:
     json.dump(geojson, f)
 
-print("Map features:", len(features))
+print("\nMap features:", len(features))
