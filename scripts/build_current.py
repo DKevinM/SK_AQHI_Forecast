@@ -96,13 +96,13 @@ def calc_aqhi(pm25, no2, o3):
 print("\n=== PULLING CURRENT STATIONS ===")
 
 r = requests.get(
-    api,
+    CURRENT_API,
     params={
         "where": "1=1",
-        "outFields": "*",
-        "orderByFields": "DATETIME DESC",
-        "resultRecordCount": 2000,
-        "f": "json"
+        "outFields": "COMMUNITY,DATETIME",
+        "returnGeometry": "true",
+        "outSR": "4326",
+        "f": "geojson"
     }
 )
 
@@ -131,9 +131,9 @@ for station, api in RAW_APIS.items():
     r = requests.get(
         api,
         params={
-            "where": f"DATETIME >= {start_ms}",
+            "where": "1=1",
             "outFields": "*",
-            "orderByFields": "DATETIME ASC",
+            "orderByFields": "DATETIME DESC",
             "resultRecordCount": 2000,
             "f": "json"
         }
@@ -143,6 +143,7 @@ for station, api in RAW_APIS.items():
 
     if "features" not in data:
         print("FAILED:", station)
+        print(json.dumps(data, indent=2)[:3000])
         continue
 
     print("Rows returned:", len(data["features"]))
