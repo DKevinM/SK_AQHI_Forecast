@@ -73,10 +73,10 @@ OUT_REGINA_CURRENT = DATA_DIR / "regina_current_blend.geojson"
 OUT_REGINA_FORECAST = DATA_DIR / "regina_forecast_3h_blend.geojson"
 
 STATION_WEIGHT = 1.0
-PURPLE_WEIGHT = 0.5
-IDW_POWER = 2.0
-MAX_IDW_DIST_KM = 175.0
-MIN_POINTS = 1
+PURPLE_WEIGHT = 0.75
+IDW_POWER = 3.0
+MAX_IDW_DIST_KM = 75.0
+MIN_POINTS = 3
 
 # Regina domain
 REGINA_LAT = 50.4452
