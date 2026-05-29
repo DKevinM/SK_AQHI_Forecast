@@ -75,8 +75,9 @@ OUT_REGINA_FORECAST = DATA_DIR / "regina_forecast_3h_blend.geojson"
 STATION_WEIGHT = 1.0
 PURPLE_WEIGHT = 0.75
 IDW_POWER = 3.0
-MAX_IDW_DIST_KM = 75.0
-MIN_POINTS = 3
+MAX_IDW_DIST_KM = 100.
+MIN_POINTS_SK = 1
+MIN_POINTS_REGINA = 3
 
 # Regina domain
 REGINA_LAT = 50.4452
@@ -570,14 +571,20 @@ def generate_grid_points(domain: str, step: float):
 # IDW GRID BUILDER
 # =========================================================
 
-def idw_value(lon, lat, pts: pd.DataFrame, value_col: str) -> Tuple[Optional[float], int, Optional[float]]:
+def idw_value(
+    lon,
+    lat,
+    pts: pd.DataFrame,
+    value_col: str,
+    min_points: int
+) -> Tuple[Optional[float], int, Optional[float]]:
     if pts.empty:
         return None, 0, None
 
     distances = haversine_km(lat, lon, pts["lat"].values, pts["lon"].values)
     mask = distances <= MAX_IDW_DIST_KM
 
-    if mask.sum() < MIN_POINTS:
+    if mask.sum() < min_points:
         return None, int(mask.sum()), None
 
     d = distances[mask]
@@ -586,6 +593,8 @@ def idw_value(lon, lat, pts: pd.DataFrame, value_col: str) -> Tuple[Optional[flo
 
     d = np.where(d == 0, 0.001, d)
     w = base_w / (d ** IDW_POWER)
+    # Reduce influence of very distant points
+    w = np.where(d > 50, w * 0.25, w)
 
     z = np.sum(w * v) / np.sum(w)
     return float(z), int(mask.sum()), float(d.min())
@@ -599,6 +608,7 @@ def build_geojson_grid(
     output_path: Path,
     sk_polygon=None,
     product_name: str = "grid",
+    min_points: int = 1,
 ):
     features = []
 
@@ -609,7 +619,13 @@ def build_geojson_grid(
             if not cell.intersects(sk_polygon):
                 continue
 
-        z, n, nearest = idw_value(lon, lat, points, value_col)
+        z, n, nearest = idw_value(
+            lon,
+            lat,
+            points,
+            value_col,
+            min_points
+        )
         if z is None:
             continue
 
@@ -680,6 +696,7 @@ def main():
     # Province-wide overlays.
     build_geojson_grid(
         points=current_pts,
+        min_points=MIN_POINTS_SK,
         value_col="aqhi_current",
         domain="sk",
         step=SK_GRID_STEP_DEG,
@@ -690,6 +707,7 @@ def main():
 
     build_geojson_grid(
         points=forecast_pts,
+        min_points=MIN_POINTS_SK,
         value_col="aqhi_forecast",
         domain="sk",
         step=SK_GRID_STEP_DEG,
@@ -701,6 +719,7 @@ def main():
     # Regina 100 km overlays.
     build_geojson_grid(
         points=current_pts,
+        min_points=MIN_POINTS_REGINA,
         value_col="aqhi_current",
         domain="regina",
         step=REGINA_GRID_STEP_DEG,
@@ -710,6 +729,7 @@ def main():
 
     build_geojson_grid(
         points=forecast_pts,
+        min_points=MIN_POINTS_REGINA,
         value_col="aqhi_forecast",
         domain="regina",
         step=REGINA_GRID_STEP_DEG,
