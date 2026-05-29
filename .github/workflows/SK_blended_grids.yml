@@ -1,8 +1,4 @@
 name: Build SK Blended AQHI Grids
-
-concurrency:
-  group: SK_datapull
-  cancel-in-progress: true
   
 on:
   schedule:
