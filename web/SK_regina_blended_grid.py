@@ -139,14 +139,34 @@ def clean_num(x) -> Optional[float]:
 
 def aqhi_color(v: float) -> str:
     if v is None or not math.isfinite(v):
-        return "#999999"
-    if v <= 3:
-        return "#016797"  # low
-    if v <= 6:
-        return "#ffcb00"  # moderate
-    if v <= 10:
-        return "#fe0002"  # high
-    return "#640100"      # very high
+        return "#D3D3D3"
+    try:
+        v = round(float(v))
+    except Exception:
+        return "#D3D3D3"
+    if v < 1:
+        return "#D3D3D3"
+    if v == 1:
+        return "#01cbff"
+    if v == 2:
+        return "#0099cb"
+    if v == 3:
+        return "#016797"
+    if v == 4:
+        return "#fffe03"
+    if v == 5:
+        return "#ffcb00"
+    if v == 6:
+        return "#ff9835"
+    if v == 7:
+        return "#fd6866"
+    if v == 8:
+        return "#fe0002"
+    if v == 9:
+        return "#cc0001"
+    if v == 10:
+        return "#9a0100"
+    return "#640100"
 
 
 def aqhi_category(v: float) -> str:
@@ -448,9 +468,17 @@ def load_purpleair() -> pd.DataFrame:
             except Exception:
                 pass
 
-        aqhi = props.get("eAQHI") or props.get("eaqhi") or props.get("AQHI")
+        aqhi = props.get("eAQHI") or props.get("eaqhi") or props.get("AQHI")        
         if aqhi is None:
-            aqhi = pm25_to_eaqhi(props.get("pm25") or props.get("pm25_corrected") or props.get("pm_corrected_clean"))
+            pm_val = (
+                props.get("pm25")
+                or props.get("pm_corr")
+                or props.get("pm25_corrected")
+                or props.get("pm_corrected_clean")
+                or props.get("pm_corrected_original")
+            )
+            aqhi = pm25_to_eaqhi(pm_val)
+            
 
         lat = clean_num(lat)
         lon = clean_num(lon)
@@ -472,6 +500,8 @@ def load_purpleair() -> pd.DataFrame:
 
     df = pd.DataFrame(records)
     print(f"Loaded PurpleAir sensors for blending: {len(df)}")
+    if not df.empty:
+        print(df["aqhi_current"].value_counts().sort_index())
     return df
 
 
@@ -628,6 +658,12 @@ def main():
     current_station_pts = stations[["lat", "lon", "aqhi_current", "weight", "source"]].copy()
     current_sensor_pts = sensors[["lat", "lon", "aqhi_current", "weight", "source"]].copy() if not sensors.empty else sensors
     current_pts = pd.concat([current_station_pts, current_sensor_pts], ignore_index=True)
+
+    print("Current blend source counts:")
+    print(current_pts["source"].value_counts())
+    
+    print("Current blend AQHI by source:")
+    print(current_pts.groupby("source")["aqhi_current"].describe())
 
     # Forecast points: RF forecast station AQHI + PurpleAir persistence.
     forecast_station_pts = forecast_stations[["lat", "lon", "aqhi_forecast", "weight", "source"]].copy()
