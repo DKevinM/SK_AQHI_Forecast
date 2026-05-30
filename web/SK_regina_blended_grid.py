@@ -74,10 +74,10 @@ OUT_REGINA_FORECAST = DATA_DIR / "regina_forecast_3h_blend.geojson"
 
 STATION_WEIGHT = 1.0
 PURPLE_WEIGHT = 0.75
-IDW_POWER = 1.5
-MAX_IDW_DIST_KM = 100.
+IDW_POWER = 2
+MAX_IDW_DIST_KM = 150.
 MIN_POINTS_SK = 1
-MIN_POINTS_REGINA = 5
+MIN_POINTS_REGINA = 1
 
 # Regina domain
 REGINA_LAT = 50.4452
@@ -611,7 +611,26 @@ def build_geojson_grid(
     min_points: int = 1,
 ):
     features = []
-
+    
+    # Match Alberta approach: subset points to the active grid domain first
+    if domain == "regina":
+        margin = 0.25
+        xmin, xmax = REGINA_LON - 1.45 - margin, REGINA_LON + 1.45 + margin
+        ymin, ymax = REGINA_LAT - 0.95 - margin, REGINA_LAT + 0.95 + margin
+    
+        points = points[
+            points["lat"].between(ymin, ymax) &
+            points["lon"].between(xmin, xmax)
+        ].copy()
+    
+        print(f"Regina {product_name} interpolation points:")
+        print(points["source"].value_counts())
+        print(points.groupby("source")[value_col].describe())
+    
+    elif domain == "sk":
+        print(f"SK {product_name} interpolation points:")
+        print(points["source"].value_counts())
+    
     for lon, lat in generate_grid_points(domain, step):
         cell = make_cell(lon, lat, step)
 
