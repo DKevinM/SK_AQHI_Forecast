@@ -67,6 +67,7 @@ jobs:
           git add data/regina_current_blend.geojson
           git add data/regina_forecast_3h_blend.geojson
           git add data/station_forecast_3h_debug.csv
+          git add data/aqhi_forecasts.geojson
 
           git commit -m 'Update SK blended AQHI grids' || echo 'No changes to commit'
           git push origin main
