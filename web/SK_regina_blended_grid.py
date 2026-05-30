@@ -74,10 +74,10 @@ OUT_REGINA_FORECAST = DATA_DIR / "regina_forecast_3h_blend.geojson"
 
 STATION_WEIGHT = 1.0
 PURPLE_WEIGHT = 0.75
-IDW_POWER = 3.0
+IDW_POWER = 1.5
 MAX_IDW_DIST_KM = 100.
 MIN_POINTS_SK = 1
-MIN_POINTS_REGINA = 3
+MIN_POINTS_REGINA = 5
 
 # Regina domain
 REGINA_LAT = 50.4452
@@ -85,10 +85,10 @@ REGINA_LON = -104.6189
 REGINA_RADIUS_KM = 100.0
 
 # Grid size. 0.05 degrees is roughly 4–6 km around Regina.
-REGINA_GRID_STEP_DEG = 0.05
+REGINA_GRID_STEP_DEG = 0.02
 
 # Provincial grid should stay coarser for browser performance.
-SK_GRID_STEP_DEG = 0.20
+SK_GRID_STEP_DEG = 0.10
 
 # PurpleAir persistence age limit.
 # If you are troubleshooting stale files, temporarily increase this or set to None.
@@ -593,8 +593,7 @@ def idw_value(
 
     d = np.where(d == 0, 0.001, d)
     w = base_w / (d ** IDW_POWER)
-    # Reduce influence of very distant points
-    w = np.where(d > 50, w * 0.25, w)
+
 
     z = np.sum(w * v) / np.sum(w)
     src = pts.loc[mask, "source"].astype(str).value_counts().to_dict()
@@ -630,7 +629,10 @@ def build_geojson_grid(
         if z is None:
             continue
 
-        z_round = round(z, 1)
+        if "forecast" in product_name:
+            z_round = round(z, 1)
+        else:
+            z_round = round(z)
         features.append(
             {
                 "type": "Feature",
