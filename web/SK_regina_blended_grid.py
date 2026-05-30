@@ -469,16 +469,24 @@ def load_purpleair() -> pd.DataFrame:
             except Exception:
                 pass
 
-        aqhi = props.get("eAQHI") or props.get("eaqhi") or props.get("AQHI")        
-        if aqhi is None:
-            pm_val = (
-                props.get("pm25")
-                or props.get("pm_corr")
-                or props.get("pm25_corrected")
-                or props.get("pm_corrected_clean")
-                or props.get("pm_corrected_original")
-            )
-            aqhi = pm25_to_eaqhi(pm_val)
+ 
+        pm_val = (
+            props.get("pm25")
+            or props.get("pm_corr")
+            or props.get("pm25_corrected")
+            or props.get("pm_corrected_clean")
+            or props.get("pm_corrected_original")
+        )
+        
+        pm_val = clean_num(pm_val)
+        
+        if pm_val is None:
+            continue
+
+        
+        # Continuous AQHI-like field for interpolation
+        aqhi = (pm_val / 10.0) + 1.0
+        aqhi = min(max(aqhi, 1.0), 11.0)
             
 
         lat = clean_num(lat)
