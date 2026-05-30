@@ -98,24 +98,6 @@ def main():
 
     
     
-    print(f"Found {len(tables)} tables")
-    
-    for i, t in enumerate(tables):
-        print("\n" + "=" * 80)
-        print(f"TABLE {i}")
-        print("=" * 80)
-    
-        print(f"Shape: {t.shape}")
-    
-        print("Columns:")
-        for c in t.columns:
-            print(f"  - {c}")
-    
-        print("\nPreview:")
-        print(t.head(5).to_string())
-
-
-
     
     if not tables:
         raise RuntimeError("No tables found on ECCC AQHI summary page.")
@@ -140,8 +122,9 @@ def main():
     # Forecast columns are normally the last four columns.
     forecast_cols = [
         c for c in df.columns
-        if "Forecast Maximums" in str(c)
-        and "Unnamed" not in str(c)
+        if isinstance(c, tuple)
+        and c[0] == "Forecast Maximums"
+        and "Unnamed" not in str(c[1])
     ]
 
     station_lookup = load_station_lookup()
