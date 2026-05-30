@@ -96,6 +96,27 @@ def main():
 
     tables = pd.read_html(StringIO(response.text))
 
+    
+    
+    print(f"Found {len(tables)} tables")
+    
+    for i, t in enumerate(tables):
+        print("\n" + "=" * 80)
+        print(f"TABLE {i}")
+        print("=" * 80)
+    
+        print(f"Shape: {t.shape}")
+    
+        print("Columns:")
+        for c in t.columns:
+            print(f"  - {c}")
+    
+        print("\nPreview:")
+        print(t.head(5).to_string())
+
+
+
+    
     if not tables:
         raise RuntimeError("No tables found on ECCC AQHI summary page.")
 
@@ -124,7 +145,7 @@ def main():
     features = []
     issued_at = None
 
-    m = re.search(r"Forecast issued at:\s*([^<\n]+)", html.text)
+    m = re.search(r"Forecast issued at:\s*([^<\n]+)", response.text)
     if m:
         issued_at = clean_text(m.group(1))
 
