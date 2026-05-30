@@ -4,6 +4,7 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from io import StringIO
 
 import pandas as pd
 import requests
@@ -83,14 +84,17 @@ def main():
 
     print(f"Fetching ECCC AQHI summary: {URL}")
 
-    html = requests.get(
+    response = requests.get(
         URL,
         timeout=30,
         headers={"User-Agent": "SK_datapull AQHI forecast builder"},
     )
-    html.raise_for_status()
+    response.raise_for_status()
+    
+    if "Air Quality Health Index" not in response.text:
+        raise RuntimeError("Unexpected ECCC response page")
 
-    tables = pd.read_html(html.text)
+    tables = pd.read_html(StringIO(response.text))
 
     if not tables:
         raise RuntimeError("No tables found on ECCC AQHI summary page.")
