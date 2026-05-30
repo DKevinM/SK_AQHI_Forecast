@@ -120,7 +120,7 @@ def main():
     if not tables:
         raise RuntimeError("No tables found on ECCC AQHI summary page.")
 
-    df = tables[0]
+    df = tables[1]
 
     # Flatten possible multi-index columns.
     df.columns = [
@@ -138,7 +138,11 @@ def main():
     location_col = df.columns[0]
 
     # Forecast columns are normally the last four columns.
-    forecast_cols = list(df.columns[-4:])
+    forecast_cols = [
+        c for c in df.columns
+        if "Forecast Maximums" in str(c)
+        and "Unnamed" not in str(c)
+    ]
 
     station_lookup = load_station_lookup()
 
