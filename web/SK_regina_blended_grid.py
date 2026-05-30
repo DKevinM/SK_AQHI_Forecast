@@ -579,13 +579,13 @@ def idw_value(
     min_points: int
 ) -> Tuple[Optional[float], int, Optional[float]]:
     if pts.empty:
-        return None, 0, None
+        return None, 0, None, {}
 
     distances = haversine_km(lat, lon, pts["lat"].values, pts["lon"].values)
     mask = distances <= MAX_IDW_DIST_KM
 
     if mask.sum() < min_points:
-        return None, int(mask.sum()), None
+        return None, int(mask.sum()), None, {}
 
     d = distances[mask]
     v = pts.loc[mask, value_col].astype(float).values
@@ -597,7 +597,8 @@ def idw_value(
     w = np.where(d > 50, w * 0.25, w)
 
     z = np.sum(w * v) / np.sum(w)
-    return float(z), int(mask.sum()), float(d.min())
+    src = pts.loc[mask, "source"].astype(str).value_counts().to_dict()
+    return float(z), int(mask.sum()), float(d.min()), src
 
 
 def build_geojson_grid(
@@ -619,7 +620,7 @@ def build_geojson_grid(
             if not cell.intersects(sk_polygon):
                 continue
 
-        z, n, nearest = idw_value(
+        z, n, nearest, src_counts = idw_value(
             lon,
             lat,
             points,
@@ -640,10 +641,11 @@ def build_geojson_grid(
                     "color": aqhi_color(z_round),
                     "category": aqhi_category(z_round),
                     "n_points": n,
+                    "source_counts": src_counts,
                     "nearest_km": round(nearest, 1) if nearest is not None else None,
                     "product": product_name,
                     "domain": domain,
-                    "generated_utc": datetime.now(timezone.utc).isoformat(),
+                    "generated_utc": datetime.now(timezone.utc).isoformat(),                    
                 },
             }
         )
